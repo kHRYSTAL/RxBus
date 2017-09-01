@@ -62,9 +62,7 @@ public class RxBus {
      * post sticky event
      */
     public void postSticky(Object event) {
-        synchronized (mStickyEventMap) {
-            mStickyEventMap.put(event.getClass(), event);
-        }
+        mStickyEventMap.put(event.getClass(), event);
         post(event);
     }
 
@@ -72,41 +70,33 @@ public class RxBus {
      * receive sticky event
      */
     public <T> Observable<T> tObservableSticky(final Class<T> eventType) {
-        synchronized (mStickyEventMap) {
-            Observable<T> observable = mBus.ofType(eventType);
-            final Object event = mStickyEventMap.get(eventType);
+        Observable<T> observable = mBus.ofType(eventType);
+        final Object event = mStickyEventMap.get(eventType);
 
-            if (event != null) {
-                return observable.mergeWith(Observable.create(new ObservableOnSubscribe<T>() {
-                    @Override
-                    public void subscribe(ObservableEmitter<T> e) throws Exception {
-                        e.onNext(eventType.cast(event));
-                    }
-                }));
-            } else {
-                return observable;
-            }
+        if (event != null) {
+            return observable.mergeWith(Observable.create(new ObservableOnSubscribe<T>() {
+                @Override
+                public void subscribe(ObservableEmitter<T> e) throws Exception {
+                    e.onNext(eventType.cast(event));
+                }
+            }));
+        } else {
+            return observable;
         }
     }
 
     //region sticky event method
 
     public <T> T getStickyEvent(Class<T> eventType) {
-        synchronized (mStickyEventMap) {
-            return eventType.cast(mStickyEventMap.get(eventType));
-        }
+        return eventType.cast(mStickyEventMap.get(eventType));
     }
 
     public <T> T removeStickyEvent(Class<T> eventType) {
-        synchronized (mStickyEventMap) {
-            return eventType.cast(mStickyEventMap.remove(eventType));
-        }
+        return eventType.cast(mStickyEventMap.remove(eventType));
     }
 
     public void removeAllStickyEvents() {
-        synchronized (mStickyEventMap) {
-            mStickyEventMap.clear();
-        }
+        mStickyEventMap.clear();
     }
 
     //endregion
